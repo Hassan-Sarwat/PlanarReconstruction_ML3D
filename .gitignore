@@ -4,6 +4,7 @@
 # Data
 output_dir/
 datasets/
+config.yaml
 
 
 # checkpoints

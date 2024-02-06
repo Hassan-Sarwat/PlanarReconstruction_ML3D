@@ -272,9 +272,9 @@ def train(_run, _log):
                 x = image_processor(resized_image, do_resize=False, return_tensors='pt')['pixel_values'].to(device)
             
             if cfg.model.semantic:
-                logit, embedding, _, _, param, semantic, combi = network(image)
+                logit, embedding, _, _, param, semantic, combi = network(x)
             else:
-                logit, embedding, _, _, param = network(image)
+                logit, embedding, _, _, param = network(x)
 
             # print(semantic)
             # print('00'*100)
@@ -356,7 +356,8 @@ def train(_run, _log):
             losses_depth.update(loss_depth.item())
             losses_normal.update(loss_normal.item())
             losses_instance.update(loss_instance.item())
-            losses_semantic.update(loss_semantic.item())
+            if cfg.model.semantic:
+                losses_semantic.update(loss_semantic.item())
             # update time
             batch_time.update(time.time() - tic)
             tic = time.time()

@@ -1,23 +1,23 @@
 seed: 123
 num_gpus: 1
 num_epochs: 5
-resume_dir: /cluster/52/sarwath/snet/output/models/
+resume_dir: output_dir/models/
 print_interval: 10
 
 
 solver:
   method: adam
-  lr: 0.0001
+  lr: 0.001
   weight_decay: 0.00001
 
 dataset:
-  root_dir: /cluster/52/sarwath/snet/output/processed/
-  batch_size: 16
+  root_dir: output_dir/processed/
+  batch_size: 8
   num_workers: 8
 
 model:
-  arch: resnet101 #  dpt #  
+  arch: dpt #  resnet101 #  
   pretrained: True
   embed_dims: 2
   fix_bn: False
-  semantic: True
+  semantic: False

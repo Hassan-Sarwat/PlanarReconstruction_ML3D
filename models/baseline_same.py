@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from models import resnet_scene as resnet
-from transformers import DPTModel, DPTConfig, DPTImageProcessor, DPTForSemanticSegmentation
+from transformers import DPTModel, DPTConfig, DPTImageProcessor, DPTForSemanticSegmentation, DPTForDepthEstimation
 import collections.abc
 import math
 from dataclasses import dataclass
@@ -47,138 +47,6 @@ class ResNet(nn.Module):
     
 
     
-# def _get_backbone_hidden_size(config):
-#     if config.backbone_config is not None and config.is_hybrid is False:
-#         return config.backbone_config.hidden_size
-#     else:
-#         return config.hidden_size
-
-    
-# class DPTReassembleLayer(nn.Module):
-#     def __init__(self, config, channels, factor):
-#         super().__init__()
-#         # projection
-#         hidden_size = _get_backbone_hidden_size(config)
-#         self.projection = nn.Conv2d(in_channels=hidden_size, out_channels=channels, kernel_size=1)
-
-#         # up/down sampling depending on factor
-#         if factor > 1:
-#             self.resize = nn.ConvTranspose2d(channels, channels, kernel_size=factor, stride=factor, padding=0)
-#         elif factor == 1:
-#             self.resize = nn.Identity()
-#         elif factor < 1:
-#             # so should downsample
-#             self.resize = nn.Conv2d(channels, channels, kernel_size=3, stride=int(1 / factor), padding=1)
-
-#     def forward(self, hidden_state):
-#         hidden_state = self.projection(hidden_state)
-#         hidden_state = self.resize(hidden_state)
-#         return hidden_state
-    
-# class DPTReassembleStage(nn.Module):
-#     """
-#     This class reassembles the hidden states of the backbone into image-like feature representations at various
-#     resolutions.
-
-#     This happens in 3 stages:
-#     1. Map the N + 1 tokens to a set of N tokens, by taking into account the readout ([CLS]) token according to
-#        `config.readout_type`.
-#     2. Project the channel dimension of the hidden states according to `config.neck_hidden_sizes`.
-#     3. Resizing the spatial dimensions (height, width).
-
-#     Args:
-#         config (`[DPTConfig]`):
-#             Model configuration class defining the model architecture.
-#     """
-
-#     def __init__(self, config):
-#         super().__init__()
-
-#         self.config = config
-#         self.layers = nn.ModuleList()
-#         if config.is_hybrid:
-#             self._init_reassemble_dpt_hybrid(config)
-#         else:
-#             self._init_reassemble_dpt(config)
-
-#         self.neck_ignore_stages = config.neck_ignore_stages
-
-#     def _init_reassemble_dpt_hybrid(self, config):
-#         r""" "
-#         For DPT-Hybrid the first 2 reassemble layers are set to `nn.Identity()`, please check the official
-#         implementation: https://github.com/isl-org/DPT/blob/f43ef9e08d70a752195028a51be5e1aff227b913/dpt/vit.py#L438
-#         for more details.
-#         """
-#         for i, factor in zip(range(len(config.neck_hidden_sizes)), config.reassemble_factors):
-#             if i <= 1:
-#                 self.layers.append(nn.Identity())
-#             elif i > 1:
-#                 self.layers.append(DPTReassembleLayer(config, channels=config.neck_hidden_sizes[i], factor=factor))
-
-#         if config.readout_type != "project":
-#             raise ValueError(f"Readout type {config.readout_type} is not supported for DPT-Hybrid.")
-
-#         # When using DPT-Hybrid the readout type is set to "project". The sanity check is done on the config file
-#         self.readout_projects = nn.ModuleList()
-#         hidden_size = _get_backbone_hidden_size(config)
-#         for i in range(len(config.neck_hidden_sizes)):
-#             if i <= 1:
-#                 self.readout_projects.append(nn.Sequential(nn.Identity()))
-#             elif i > 1:
-#                 self.readout_projects.append(
-#                     nn.Sequential(nn.Linear(2 * hidden_size, hidden_size), ACT2FN[config.hidden_act])
-#                 )
-
-#     def _init_reassemble_dpt(self, config):
-#         for i, factor in zip(range(len(config.neck_hidden_sizes)), config.reassemble_factors):
-#             self.layers.append(DPTReassembleLayer(config, channels=config.neck_hidden_sizes[i], factor=factor))
-
-#         if config.readout_type == "project":
-#             self.readout_projects = nn.ModuleList()
-#             hidden_size = _get_backbone_hidden_size(config)
-#             for _ in range(len(config.neck_hidden_sizes)):
-#                 self.readout_projects.append(
-#                     nn.Sequential(nn.Linear(2 * hidden_size, hidden_size), ACT2FN[config.hidden_act])
-#                 )
-
-#     def forward(self, hidden_states: List[torch.Tensor], patch_height=None, patch_width=None) -> List[torch.Tensor]:
-#         """
-#         Args:
-#             hidden_states (`List[torch.FloatTensor]`, each of shape `(batch_size, sequence_length + 1, hidden_size)`):
-#                 List of hidden states from the backbone.
-#         """
-#         out = []
-
-#         for i, hidden_state in enumerate(hidden_states):
-#             if i not in self.neck_ignore_stages:
-#                 # reshape to (batch_size, num_channels, height, width)
-#                 cls_token, hidden_state = hidden_state[:, 0], hidden_state[:, 1:]
-#                 batch_size, sequence_length, num_channels = hidden_state.shape
-#                 if patch_height is not None and patch_width is not None:
-#                     hidden_state = hidden_state.reshape(batch_size, patch_height, patch_width, num_channels)
-#                 else:
-#                     size = int(math.sqrt(sequence_length))
-#                     hidden_state = hidden_state.reshape(batch_size, size, size, num_channels)
-#                 hidden_state = hidden_state.permute(0, 3, 1, 2).contiguous()
-
-#                 feature_shape = hidden_state.shape
-#                 if self.config.readout_type == "project":
-#                     # reshape to (batch_size, height*width, num_channels)
-#                     hidden_state = hidden_state.flatten(2).permute((0, 2, 1))
-#                     readout = cls_token.unsqueeze(1).expand_as(hidden_state)
-#                     # concatenate the readout token to the hidden states and project
-#                     hidden_state = self.readout_projects[i](torch.cat((hidden_state, readout), -1))
-#                     # reshape back to (batch_size, num_channels, height, width)
-#                     hidden_state = hidden_state.permute(0, 2, 1).reshape(feature_shape)
-#                 elif self.config.readout_type == "add":
-#                     hidden_state = hidden_state.flatten(2) + cls_token.unsqueeze(-1)
-#                     hidden_state = hidden_state.reshape(feature_shape)
-#                 hidden_state = self.layers[i](hidden_state)
-#             out.append(hidden_state)
-
-#         return out
-
-    
 
 class Baseline(nn.Module):
     def __init__(self, cfg):
@@ -189,7 +57,10 @@ class Baseline(nn.Module):
             self.arch = 'dpt'
             self.dpt_config = DPTConfig(image_size=256)
             self.dpt =  DPTForSemanticSegmentation(config = self.dpt_config).from_pretrained("Intel/dpt-large-ade")
+            self.dpt.config.image_size = 256
             self.dpt_config = self.dpt.config
+            print(self.dpt_config)
+            print('x'*200)
             self.dpt_proj = nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
             self.dpt_conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1)
             self.dpt_up1 = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
@@ -315,7 +186,8 @@ class Baseline(nn.Module):
             
 
         # output
-        
+        # print(p0.shape)
+        # print('-'*100)
         prob = self.pred_prob(p0)
         embedding = self.embedding_conv(p0)
         depth = self.pred_depth(p0)
