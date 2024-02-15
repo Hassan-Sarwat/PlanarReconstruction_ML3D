@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 # ALL THESE LOSSES ARE WORKING WITH A SINGLE IMAGE (192 x 256). BATCH SIZE IS 1.
 
-def contrastive_loss_centers(embedding, num_planes, segmentation, device, temperature=0.07, base_temperature=0.07):
+def contrastive_loss(embedding, num_planes, segmentation, device, temperature=0.07, base_temperature=0.07):
     """Uses the center of each plane as an anchor, yielding 1 positive and num_planes-1 negative anchors per pixel.
     """
     b, c, h, w = embedding.size() # 1 x 2 x 192 x 256
@@ -49,7 +49,7 @@ def contrastive_loss_centers(embedding, num_planes, segmentation, device, temper
     log_prob = positive.sum(0) - torch.log(exp_logits.sum(0))
 
     loss = - (temperature / base_temperature) * log_prob
-    return torch.mean(loss.to(device))
+    return torch.mean(loss.to(device)), torch.mean(loss.to(device)), torch.mean(loss.to(device))
 
 
 def contrastive_loss_anchors(embedding, num_planes, segmentation, device, temperature=0.07, base_temperature=0.07):
@@ -65,7 +65,7 @@ def contrastive_loss_anchors(embedding, num_planes, segmentation, device, temper
     segmentation = segmentation[0]
 
     # Anchor parameters
-    num_samples = 5 # additional anchors per plane (m)
+    num_samples = 20 # additional anchors per plane (m)
     size = 0.2 # proportion of the plane to subsample for the new center
 
     anchors = []
@@ -86,18 +86,18 @@ def contrastive_loss_anchors(embedding, num_planes, segmentation, device, temper
     # Inner product of each pixel with each of the centers
     embedding = embedding.view(-1,c).unsqueeze(1).unsqueeze(1)
     anchors = anchors.unsqueeze(0).unsqueeze(0)
-    logits = embedding*logits # 1 x h*w x num_planes x m+1 x c
+    logits = embedding*anchors # 1 x h*w x num_planes x m+1 x c
     logits = logits.sum(-1).squeeze(0) # h*w x num_planes x m+1
 
     segmentation = torch.transpose(segmentation[:num_planes, :, :].view(-1, h*w), 0, 1) # mask each pixel w.r.t. segmentation
 
     # Only take the dot product of the corresponding positive centers
-    positive = logits * positive.to(torch.float)
+    positive = logits * segmentation.to(torch.float).unsqueeze(-1)
     
     # Consider only planar pixels
     indices = segmentation.sum(dim=1).nonzero().squeeze()
     positive = positive[indices] # num_planar x num_planes x m+1
-    logits = logits[indices].view(indices.shape[0], -1) # num_planar x num_planes x m+1
+    logits = logits[indices].view(indices.shape[0], -1).unsqueeze(-1) # num_planar x num_planes*m+1 x 1
     
     exp_logits = torch.exp(logits)
 
@@ -108,7 +108,7 @@ def contrastive_loss_anchors(embedding, num_planes, segmentation, device, temper
 
     loss = - (temperature / base_temperature) * mean_pos_log_prob
 
-    return torch.mean(loss.to(device))
+    return torch.mean(loss.to(device)), torch.mean(loss.to(device)), torch.mean(loss.to(device))
 
 
 
@@ -126,7 +126,7 @@ def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device, te
     segmentation = segmentation[0]
 
     # Anchor parameters
-    num_samples = 5 # additional anchors per plane (m)
+    num_samples = 20 # additional anchors per plane (m)
     size = 0.2 # proportion of the plane to subsample for the new center
 
     anchors = []
@@ -149,24 +149,23 @@ def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device, te
     # Inner product of each pixel with each of the centers
     embedding = embedding.view(-1,c).unsqueeze(1).unsqueeze(1)
     anchors = anchors.unsqueeze(0).unsqueeze(0)
-    logits = embedding*logits # 1 x h*w x num_planes x m+1 x c
+    logits = embedding*anchors # 1 x h*w x num_planes x m+1 x c
     logits = logits.sum(-1).squeeze(0) # h*w x num_planes x m+1
 
     segmentation = torch.transpose(segmentation[:num_planes, :, :].view(-1, h*w), 0, 1) # mask each pixel w.r.t. segmentation
 
     # Only take the dot product of the actual positive center
-    positive = logits[:,:,0] * positive.to(torch.float)  
+    positive = logits[:,:,0] * segmentation.to(torch.float)  
 
 
     # Consider only planar pixels
     indices = segmentation.sum(dim=1).nonzero().squeeze()
     positive = positive[indices] # num_planar x num_planes
-    logits = logits[indices].view(indices.shape[0], -1) # num_planar x num_planes x m+1 
+    logits = logits[indices].view(indices.shape[0], -1) # num_planar x num_planes*m+1 
     
     exp_logits = torch.exp(logits)
 
     log_prob = positive.sum(1) - torch.log(exp_logits.sum(1))
-    print(positive.sum(1).shape, exp_logits.sum(1).shape, log_prob.shape)
     loss = - (temperature / base_temperature) * log_prob
 
-    return torch.mean(loss.to(device))
+    return torch.mean(loss.to(device)), torch.mean(loss.to(device)), torch.mean(loss.to(device))
