@@ -19,5 +19,6 @@ model:
   arch: dpt #  resnet101 #  
   pretrained: True
   embed_dims: 2
+  embed_loss: hinge # hinge, contrastive, contrastive_anchors, contrastive_anchors_neg
   fix_bn: False
   semantic: False
