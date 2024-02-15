@@ -288,7 +288,10 @@ def train(_run, _log):
                 tempc = combi
             segmentations, sample_segmentations, sample_params, centers, sample_probs, sample_gt_segs = \
                 bin_mean_shift(logit, tempc, param, gt_seg)
-
+            
+           
+            
+            
             # calculate loss
             loss, loss_pull, loss_push, loss_binary, loss_depth, loss_normal, loss_parameters, loss_pw, loss_instance, loss_semantic, loss_contrastive \
                 = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.
@@ -422,7 +425,11 @@ def train(_run, _log):
         history['rmses'].append(rmses.avg)
         history['losses_semantic'].append(losses_semantic.avg)
         history['losses_contrastive'].append(losses_contrastive.avg)
-
+        
+        if cfg.model.semantic:
+            labels_save= torch.argmax(semantic[0], dim=0)
+            torch.save(labels_save, 'semantics.pt')
+        torch.save(segmentations[0], 'segmentations.pt')
 
         # save checkpoint
         # if not (_run._id is None):
