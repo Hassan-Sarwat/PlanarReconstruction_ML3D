@@ -18,6 +18,8 @@ import torchvision.transforms as tf
 from models.baseline_same import Baseline as UNet
 from utils.loss import hinge_embedding_loss, surface_normal_loss, parameter_loss, \
     class_balanced_cross_entropy_loss
+from utils.contrastive import contrastive_loss_centers, contrastive_loss_anchors, \
+    contrastive_loss_anchors_neg
 from utils.misc import AverageMeter, get_optimizer
 from utils.metric import eval_iou, eval_plane_prediction
 from utils.disp import tensor_to_image
@@ -251,6 +253,7 @@ def train(_run, _log):
         instance_rmses = AverageMeter()
         mean_angles = AverageMeter()
         losses_semantic = AverageMeter()
+        losses_contrastive = AverageMeter()
 
 
         tic = time.time()
@@ -287,13 +290,27 @@ def train(_run, _log):
                 bin_mean_shift(logit, tempc, param, gt_seg)
 
             # calculate loss
-            loss, loss_pull, loss_push, loss_binary, loss_depth, loss_normal, loss_parameters, loss_pw, loss_instance, loss_semantic \
-                = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.
+            loss, loss_pull, loss_push, loss_binary, loss_depth, loss_normal, loss_parameters, loss_pw, loss_instance, loss_semantic, loss_contrastive \
+                = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.
             batch_size = image.size(0)
             for i in range(batch_size):
-                _loss_semantic = 0 
-                _loss, _loss_pull, _loss_push = hinge_embedding_loss(embedding[i:i+1], sample['num_planes'][i:i+1],
-                                                                     instance[i:i+1], device)
+                _loss_semantic, _loss_contrastive, _loss_pull, _loss_push = 0, 0, 0, 0
+
+                if cfg.embed_loss == 'hinge':
+                    _loss, _loss_pull, _loss_push = hinge_embedding_loss(embedding[i:i+1], sample['num_planes'][i:i+1],
+                                                                        instance[i:i+1], device)
+                if cfg.embed_loss == 'contrastive':
+                    _loss = contrastive_loss_centers(embedding[i:i+1], sample['num_planes'][i:i+1],
+                                                                        instance[i:i+1], device)
+                    _loss_contrastive = _loss
+                if cfg.embed_loss == 'contrastive_anchors':
+                    _loss = contrastive_loss_anchors(embedding[i:i+1], sample['num_planes'][i:i+1],
+                                                                        instance[i:i+1], device)
+                    _loss_contrastive = _loss
+                if cfg.embed_loss == 'contrastive_anchors_neg':
+                    _loss = contrastive_loss_anchors_neg(embedding[i:i+1], sample['num_planes'][i:i+1],
+                                                                        instance[i:i+1], device)
+                    _loss_contrastive = _loss
 
                 _loss_binary = class_balanced_cross_entropy_loss(logit[i], planar[i])
 
@@ -333,6 +350,7 @@ def train(_run, _log):
                 loss_normal += _loss_normal
                 loss_instance += _instance_loss
                 loss_semantic += _loss_semantic
+                loss_contrastive += _loss_contrastive
 
             loss /= batch_size
             loss_pull /= batch_size
@@ -342,6 +360,7 @@ def train(_run, _log):
             loss_normal /= batch_size
             loss_instance /= batch_size
             loss_semantic /= batch_size
+            loss_contrastive /= batch_size
 
             # Backward
             optimizer.zero_grad()
@@ -358,6 +377,8 @@ def train(_run, _log):
             losses_instance.update(loss_instance.item())
             if cfg.model.semantic:
                 losses_semantic.update(loss_semantic.item())
+            if cfg.embed_loss != 'hinge':
+                losses_contrastive.update(loss_contrastive.item())
             # update time
             batch_time.update(time.time() - tic)
             tic = time.time()
@@ -376,7 +397,8 @@ def train(_run, _log):
                           f"Depth: {losses_depth.val:.4f} ({losses_depth.avg:.4f}) "
                           f"INSDEPTH: {instance_rmses.val:.4f} ({instance_rmses.avg:.4f}) "
                           f"RMSE: {rmses.val:.4f} ({rmses.avg:.4f}) "
-                          f"Semantic: {losses_semantic.val:.4f}({losses_semantic.avg:.4f}) ")
+                          f"Semantic: {losses_semantic.val:.4f}({losses_semantic.avg:.4f}) " 
+                          f"Contrastive: {losses_contrastive.val:.4f} ({losses_contrastive.avg:.4f}) ")
 
 
         _log.info(f"* epoch: {epoch:2d}\t"
@@ -387,7 +409,8 @@ def train(_run, _log):
                   f"Depth: {losses_depth.avg:.6f}\t"
                   f"IoU: {ioues.avg:.2f}\t"
                   f"RMSE: {rmses.avg:.4f}\t"
-                  f"Semantic: {losses_semantic.avg:.4f}\t")
+                  f"Semantic: {losses_semantic.avg:.4f}\t"
+                  f"Contrastive: {losses_contrastive.avg:.4f}\t")
 
         # save history
         history['losses'].append(losses.avg)
@@ -398,6 +421,7 @@ def train(_run, _log):
         history['ioues'].append(ioues.avg)
         history['rmses'].append(rmses.avg)
         history['losses_semantic'].append(losses_semantic.avg)
+        history['losses_contrastive'].append(losses_contrastive.avg)
 
 
         # save checkpoint
