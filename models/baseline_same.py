@@ -53,6 +53,7 @@ class Baseline(nn.Module):
         super(Baseline, self).__init__()
         self.arch = cfg.arch
         self.semantic = cfg.semantic
+        self.extra = cfg.extra_semantic_layers
         if cfg.arch == 'dpt':
             self.arch = 'dpt'
             self.dpt_config = DPTConfig(image_size=256)
@@ -118,8 +119,13 @@ class Baseline(nn.Module):
         if cfg.semantic:
             # semantic segmentation
             self.pred_semantic = nn.Conv2d(channel, 41, (1, 1), padding=0)
-            # combination for semantic pool
-            self.combination = nn.Conv2d(43, 2, (1, 1), padding=0)
+            if cfg.extra_semantic_layers:
+                self.pred_semantic2 = nn.Conv2d(41, 2, (1, 1), padding=0)
+                self.combination = nn.Conv2d(4, 2, (1, 1), padding=0)
+
+            else: 
+                # combination for semantic pool
+                self.combination = nn.Conv2d(43, 2, (1, 1), padding=0)
 
     def top_down(self, x):
         c1, c2, c3, c4, c5 = x
@@ -196,7 +202,15 @@ class Baseline(nn.Module):
         
         if self.semantic:
             semantic = self.pred_semantic(p0)
-            combination = self.combination(torch.cat((embedding, semantic), dim=1))
+
+
+            if self.extra:
+                semantic2 = self.pred_semantic2(semantic)
+                combination = self.combination(torch.cat((embedding, semantic2), dim=1))
+                self.combination = nn.Conv2d(4, 2, (1, 1), padding=0)
+
+            else: 
+                combination = self.combination(torch.cat((embedding, semantic), dim=1))
             return prob, embedding, depth, surface_normal, param, semantic, combination
             
         return prob, embedding, depth, surface_normal, param

@@ -230,7 +230,7 @@ def train(_run, _log):
 
     # save losses per epoch
     history = {'losses': [], 'losses_pull': [], 'losses_push': [],
-               'losses_binary': [], 'losses_depth': [], 'ioues': [], 'rmses': []}
+               'losses_binary': [], 'losses_depth': [], 'ioues': [], 'rmses': [], 'losses_semantic': [], 'losses_contrastive': []}
 
     network.train(not cfg.model.fix_bn)
 
@@ -296,18 +296,18 @@ def train(_run, _log):
             for i in range(batch_size):
                 _loss_semantic, _loss_contrastive, _loss_pull, _loss_push = 0, 0, 0, 0
 
-                if cfg.embed_loss == 'hinge':
+                if cfg.model.embed_loss == 'hinge':
                     _loss, _loss_pull, _loss_push = hinge_embedding_loss(embedding[i:i+1], sample['num_planes'][i:i+1],
                                                                         instance[i:i+1], device)
-                if cfg.embed_loss == 'contrastive':
+                if cfg.model.embed_loss == 'contrastive':
                     _loss = contrastive_loss_centers(embedding[i:i+1], sample['num_planes'][i:i+1],
                                                                         instance[i:i+1], device)
                     _loss_contrastive = _loss
-                if cfg.embed_loss == 'contrastive_anchors':
+                if cfg.model.embed_loss == 'contrastive_anchors':
                     _loss = contrastive_loss_anchors(embedding[i:i+1], sample['num_planes'][i:i+1],
                                                                         instance[i:i+1], device)
                     _loss_contrastive = _loss
-                if cfg.embed_loss == 'contrastive_anchors_neg':
+                if cfg.model.embed_loss == 'contrastive_anchors_neg':
                     _loss = contrastive_loss_anchors_neg(embedding[i:i+1], sample['num_planes'][i:i+1],
                                                                         instance[i:i+1], device)
                     _loss_contrastive = _loss
@@ -377,7 +377,7 @@ def train(_run, _log):
             losses_instance.update(loss_instance.item())
             if cfg.model.semantic:
                 losses_semantic.update(loss_semantic.item())
-            if cfg.embed_loss != 'hinge':
+            if cfg.model.embed_loss != 'hinge':
                 losses_contrastive.update(loss_contrastive.item())
             # update time
             batch_time.update(time.time() - tic)

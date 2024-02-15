@@ -1,7 +1,7 @@
 seed: 123
 num_gpus: 1
 num_epochs: 5
-resume_dir: output_dir/models/
+resume_dir: /home/steve/Documents/output_dir/models/
 print_interval: 10
 
 
@@ -11,14 +11,15 @@ solver:
   weight_decay: 0.00001
 
 dataset:
-  root_dir: output_dir/processed/
+  root_dir: /home/steve/Documents/ml3d/processed_data # output_dir/processed/
   batch_size: 8
   num_workers: 8
 
 model:
-  arch: dpt #  resnet101 #  
+  arch: resnet101 #   dpt # 
   pretrained: True
   embed_dims: 2
   embed_loss: hinge # hinge, contrastive, contrastive_anchors, contrastive_anchors_neg
   fix_bn: False
   semantic: False
+  extra_semantic_layers: False
