@@ -289,8 +289,6 @@ def train(_run, _log):
             segmentations, sample_segmentations, sample_params, centers, sample_probs, sample_gt_segs = \
                 bin_mean_shift(logit, tempc, param, gt_seg)
             
-            print(image[0])
-                
            
             
             
@@ -430,13 +428,13 @@ def train(_run, _log):
         
         if cfg.model.semantic:
                 labels_save= torch.argmax(semantic[0], dim=0)
-                torch.save(labels_save, 'semantics.pt')
-                torch.save(gt_class[0], 'gt_class.pt')
+                torch.save(labels_save, str(epoch) + 'semantics.pt')
+                torch.save(gt_class[0], str(epoch) + 'gt_class.pt')
             
         
-        torch.save(image[0], 'image.pt')
-        torch.save(segmentations[0], 'segmentations.pt')
-        torch.save(gt_seg[0], 'gt_seg.pt')
+        torch.save(image[0], str(epoch) + 'image.pt')
+        torch.save(segmentations[0], str(epoch) + 'segmentations.pt')
+        torch.save(gt_seg[0], str(epoch) + 'gt_seg.pt')
 
         # save checkpoint
         # if not (_run._id is None):
