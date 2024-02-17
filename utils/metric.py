@@ -55,7 +55,8 @@ def eval_plane_prediction(predSegmentations, gtSegmentations, predDepths, gtDept
     numPixels = planeAreas.sum()
 
     IOUMask = (planeIOUs > threshold).astype(np.float32)
-    minDiff = np.min(planeDiffs * IOUMask + 1000000 * (1 - IOUMask), axis=1)
+    minDiff = np.min(planeDiffs * IOUMask + 1000000 * (1 - IOUMask), axis=1, initial=np.inf)
+
     stride = 0.05
     pixelRecalls = []
     planeStatistics = []
