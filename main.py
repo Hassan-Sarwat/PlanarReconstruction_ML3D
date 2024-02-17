@@ -198,7 +198,7 @@ def train(_run, _log):
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)
     random.seed(cfg.seed)
-    model_path = f"{cfg.resume_dir}/baseline_{cfg.model.arch}_semantic.pt"
+    model_path = f"{cfg.resume_dir}/baseline_{cfg.model.arch}_loss_extra.pt"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # print('Device:',device)
     # print('*'*100)
@@ -439,7 +439,7 @@ def train(_run, _log):
         # save checkpoint
         # if not (_run._id is None):
     torch.save(network.state_dict(), model_path)
-    pickle.dump(history, open(os.path.join(checkpoint_dir, 'history_semantic_ok.pkl'), 'wb'))
+    pickle.dump(history, open(os.path.join(checkpoint_dir, 'changed_loss_extra.pkl'), 'wb'))
 
 
 @ex.command
