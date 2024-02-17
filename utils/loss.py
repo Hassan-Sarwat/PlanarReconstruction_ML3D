@@ -154,7 +154,7 @@ def Q_loss(param, k_inv_dot_xy1, gt_depth):
 
 def semantic_loss(semantic, gt_class,device):
     gt_class = gt_class.long()
-    loss_func = torch.nngt_class = gt_class.long().CrossEntropyLoss().to(device)
+    loss_func = torch.nn.CrossEntropyLoss().to(device)
     loss = loss_func(semantic, gt_class)
     return loss
 
