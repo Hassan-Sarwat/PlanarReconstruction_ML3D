@@ -619,9 +619,9 @@ def eval(_run, _log):
             image_4 = np.concatenate((depth_diff, depth, gt_depth), axis=1)
             image = np.concatenate((image_1, image_2, image_3, image_4), axis=0)
 
-            # cv2.imshow('image', image)
-            # cv2.waitKey(0)
-            # cv2.imwrite("%d_segmentation.png"%iter, image)
+            cv2.imshow('image', image)
+            cv2.waitKey(0)
+            cv2.imwrite("%d_segmentation.png"%iter, image)
 
         print("========================================")
         print("pixel and plane recall of all test image")
