@@ -207,7 +207,6 @@ class Baseline(nn.Module):
             if self.extra:
                 semantic2 = self.pred_semantic2(semantic)
                 combination = self.combination(torch.cat((embedding, semantic2), dim=1))
-                self.combination = nn.Conv2d(4, 2, (1, 1), padding=0)
 
             else: 
                 combination = self.combination(torch.cat((embedding, semantic), dim=1))
