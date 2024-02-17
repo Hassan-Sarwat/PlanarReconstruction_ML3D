@@ -1,7 +1,7 @@
 seed: 123
 num_gpus: 1
 num_epochs: 5
-resume_dir: /cluster/51/soniacp/semantic/models
+resume_dir: /cluster/51/soniacp/semantic/models/semantic_extra
 print_interval: 10
 
 
@@ -22,4 +22,4 @@ model:
   embed_loss: hinge # hinge, contrastive, contrastive_anchors, contrastive_anchors_neg
   fix_bn: False
   semantic: True
-  extra_semantic_layers: False
+  extra_semantic_layers: True

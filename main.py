@@ -428,13 +428,13 @@ def train(_run, _log):
         
         if cfg.model.semantic:
                 labels_save= torch.argmax(semantic[0], dim=0)
-                torch.save(labels_save, '/cluster/51/soniacp/semantic/pt_files/semantic_ok' + str(epoch) + 'semantics.pt')
-                torch.save(gt_class[0], '/cluster/51/soniacp/semantic/pt_files/semantic_ok' + str(epoch) + 'gt_class.pt')
+                torch.save(labels_save, '/cluster/51/soniacp/semantic/pt_files/semantic_extra/' + str(epoch) + 'semantics.pt')
+                torch.save(gt_class[0], '/cluster/51/soniacp/semantic/pt_files/semantic_extra/' + str(epoch) + 'gt_class.pt')
             
         
-        torch.save(image[0], '/cluster/51/soniacp/semantic/pt_files/semantic_ok' + str(epoch) + 'image.pt')
-        torch.save(segmentations[0], '/cluster/51/soniacp/semantic/pt_files/semantic_ok' + str(epoch) + 'segmentations.pt')
-        torch.save(gt_seg[0], '/cluster/51/soniacp/semantic/pt_files/semantic_ok' + str(epoch) + 'gt_seg.pt')
+        torch.save(image[0], '/cluster/51/soniacp/semantic/pt_files/semantic_extra/' + str(epoch) + 'image.pt')
+        torch.save(segmentations[0], '/cluster/51/soniacp/semantic/pt_files/semantic_extra/' + str(epoch) + 'segmentations.pt')
+        torch.save(gt_seg[0], '/cluster/51/soniacp/semantic/pt_files/semantic_extra/' + str(epoch) + 'gt_seg.pt')
 
         # save checkpoint
         # if not (_run._id is None):
