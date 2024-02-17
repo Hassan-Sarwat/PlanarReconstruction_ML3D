@@ -12,7 +12,7 @@ solver:
 
 dataset:
   root_dir:  /cluster/51/sarwath/snet/output/processed # output_dir/processed/
-  batch_size: 16
+  batch_size: 1 #16
   num_workers: 8
 
 model:
