@@ -1,7 +1,7 @@
 seed: 123
 num_gpus: 1
 num_epochs: 5
-resume_dir: /cluster/51/soniacp/semantic/models/semantic_extra
+resume_dir: /cluster/51/soniacp/semantic/models
 print_interval: 10
 
 
