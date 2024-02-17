@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 # ALL THESE LOSSES ARE WORKING WITH A SINGLE IMAGE (192 x 256). BATCH SIZE IS 1.
 
-def contrastive_loss(embedding, num_planes, segmentation, device, temperature=0.07, base_temperature=0.07):
+def contrastive_loss(embedding, num_planes, segmentation, device):
     """Uses the center of each plane as an anchor, yielding 1 positive and num_planes-1 negative anchors per pixel.
     """
     b, c, h, w = embedding.size() # 1 x 2 x 192 x 256
@@ -48,11 +48,11 @@ def contrastive_loss(embedding, num_planes, segmentation, device, temperature=0.
     # positive.sum(0) has a single non-zero entry per sum
     log_prob = positive.sum(0) - torch.log(exp_logits.sum(0))
 
-    loss = - (temperature / base_temperature) * log_prob
+    loss = - log_prob
     return torch.mean(loss.to(device)), torch.mean(loss.to(device)), torch.mean(loss.to(device))
 
 
-def contrastive_loss_anchors(embedding, num_planes, segmentation, device, temperature=0.07, base_temperature=0.07):
+def contrastive_loss_anchors(embedding, num_planes, segmentation, device):
     """Uses num_samples (m) + 1 (centers) anchors per plane. Anchors are obtained by subsampling each plane (feature) 
     m times and computing its subcenter. The length of the subsample is size times the whole plane. This has m+1 positive
     anchors and (m+1)*(num_planes-1) negative ones.
@@ -106,14 +106,14 @@ def contrastive_loss_anchors(embedding, num_planes, segmentation, device, temper
     log_prob = positive.sum(1) - torch.log(exp_logits.sum(1)) # num_planar x m+1
     mean_pos_log_prob = log_prob.mean(1)
 
-    loss = - (temperature / base_temperature) * mean_pos_log_prob
+    loss = - mean_pos_log_prob
 
     return torch.mean(loss.to(device)), torch.mean(loss.to(device)), torch.mean(loss.to(device))
 
 
 
 
-def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device, temperature=0.07, base_temperature=0.07):
+def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device):
     """Uses num_samples (m) + 1 (centers) anchors per plane, but only for the negative. Anchors are obtained by subsampling 
     each plane (feature) m times and computing its subcenter. The length of the subsample is size times the whole plane. 
     This has 1 positive anchor (the true plane center) and (m+1)*(num_planes-1) negative ones.
@@ -166,6 +166,6 @@ def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device, te
     exp_logits = torch.exp(logits)
 
     log_prob = positive.sum(1) - torch.log(exp_logits.sum(1))
-    loss = - (temperature / base_temperature) * log_prob
+    loss = - log_prob
 
     return torch.mean(loss.to(device)), torch.mean(loss.to(device)), torch.mean(loss.to(device))
