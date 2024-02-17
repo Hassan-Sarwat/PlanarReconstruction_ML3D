@@ -404,6 +404,17 @@ def train(_run, _log):
                           f"Contrastive: {losses_contrastive.val:.4f} ({losses_contrastive.avg:.4f}) ")
 
 
+            # save history
+            history['losses'].append(losses.avg)
+            history['losses_pull'].append(losses_pull.avg)
+            history['losses_push'].append(losses_push.avg)
+            history['losses_binary'].append(losses_binary.avg)
+            history['losses_depth'].append(losses_depth.avg)
+            history['ioues'].append(ioues.avg)
+            history['rmses'].append(rmses.avg)
+            history['losses_semantic'].append(losses_semantic.avg)
+            history['losses_contrastive'].append(losses_contrastive.avg)
+
         _log.info(f"* epoch: {epoch:2d}\t"
                   f"Loss: {losses.avg:.6f}\t"
                   f"Pull: {losses_pull.avg:.6f}\t"
@@ -414,17 +425,6 @@ def train(_run, _log):
                   f"RMSE: {rmses.avg:.4f}\t"
                   f"Semantic: {losses_semantic.avg:.4f}\t"
                   f"Contrastive: {losses_contrastive.avg:.4f}\t")
-
-        # save history
-        history['losses'].append(losses.avg)
-        history['losses_pull'].append(losses_pull.avg)
-        history['losses_push'].append(losses_push.avg)
-        history['losses_binary'].append(losses_binary.avg)
-        history['losses_depth'].append(losses_depth.avg)
-        history['ioues'].append(ioues.avg)
-        history['rmses'].append(rmses.avg)
-        history['losses_semantic'].append(losses_semantic.avg)
-        history['losses_contrastive'].append(losses_contrastive.avg)
         
         if cfg.model.semantic:
                 labels_save= torch.argmax(semantic[0], dim=0)
