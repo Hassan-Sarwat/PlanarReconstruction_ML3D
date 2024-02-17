@@ -458,7 +458,7 @@ def eval(_run, _log):
     # build network
     network = UNet(cfg.model)
 
-    model_dict = torch.load('/cluster/51/soniacp/semantic/models/semantic_extra/baseline_resnet101_loss_extra.pt', map_location=lambda storage, loc: storage)
+    model_dict = torch.load('/cluster/51/soniacp/semantic/models/baseline_resnet101_loss.pt', map_location=lambda storage, loc: storage)
     network.load_state_dict(model_dict)
 
     # load nets into gpu
@@ -619,7 +619,7 @@ def eval(_run, _log):
             image_4 = np.concatenate((depth_diff, depth, gt_depth), axis=1)
             image = np.concatenate((image_1, image_2, image_3, image_4), axis=0)
 
-            cv2.imwrite("/cluster/51/soniacp/semantic/val_extra/" + "%d_segmentation.png"%iter, image)
+            cv2.imwrite("/cluster/51/soniacp/semantic/val/" + "%d_segmentation.png"%iter, image)
 
         print("========================================")
         print("pixel and plane recall of all test image")
