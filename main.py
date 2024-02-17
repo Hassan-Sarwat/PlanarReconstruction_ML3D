@@ -458,7 +458,7 @@ def eval(_run, _log):
     # build network
     network = UNet(cfg.model)
 
-    model_dict = torch.load('/cluster/51/soniacp/semantic/models/baseline_resnet101_semantic.pt', map_location=lambda storage, loc: storage)
+    model_dict = torch.load('/cluster/51/soniacp/semantic/models/semantic_extra/baseline_resnet101_semantic.pt', map_location=lambda storage, loc: storage)
     network.load_state_dict(model_dict)
 
     # load nets into gpu
