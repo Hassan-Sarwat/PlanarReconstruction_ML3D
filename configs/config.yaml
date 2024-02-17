@@ -22,4 +22,4 @@ model:
   embed_loss: hinge # hinge, contrastive, contrastive_anchors, contrastive_anchors_neg
   fix_bn: False
   semantic: True
-  extra_semantic_layers: True
+  extra_semantic_layers: False
