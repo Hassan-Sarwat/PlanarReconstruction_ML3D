@@ -17,8 +17,8 @@ __all__ = ['ResNet', 'resnet50', 'resnet101']
 
 
 model_urls = {
-    'resnet50': 'http://sceneparsing.csail.mit.edu/model/pretrained_resnet/resnet50-imagenet.pth',
-    'resnet101': 'http://sceneparsing.csail.mit.edu/model/pretrained_resnet/resnet101-imagenet.pth'
+    'resnet50': '/cluster/51/soniacp/semantic/PlanarReconstruction_ML3D/resnet50-imagenet.pth',
+    'resnet101': '/cluster/51/soniacp/semantic/PlanarReconstruction_ML3D/resnet101-imagenet.pth'
 }
 
 
