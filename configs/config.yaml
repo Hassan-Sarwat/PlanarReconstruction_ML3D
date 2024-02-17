@@ -1,18 +1,18 @@
 seed: 123
 num_gpus: 1
 num_epochs: 5
-resume_dir: /home/steve/Documents/output_dir/models/
+resume_dir: /cluster/51/soniacp/semantic/models
 print_interval: 10
 
 
 solver:
   method: adam
-  lr: 0.001
+  lr: 0.0001
   weight_decay: 0.00001
 
 dataset:
-  root_dir: /home/steve/Documents/ml3d/processed_data # output_dir/processed/
-  batch_size: 8
+  root_dir:  /cluster/51/sarwath/snet/output/processed # output_dir/processed/
+  batch_size: 16
   num_workers: 8
 
 model:
@@ -22,4 +22,4 @@ model:
   embed_loss: hinge # hinge, contrastive, contrastive_anchors, contrastive_anchors_neg
   fix_bn: False
   semantic: True
-  extra_semantic_layers: True
+  extra_semantic_layers: False
