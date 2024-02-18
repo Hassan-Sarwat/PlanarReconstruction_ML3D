@@ -25,8 +25,8 @@ class Bin_Mean_Shift(nn.Module):
             end = b - (b - a) / ((k + 1) * 2)
             return start, end
 
-        min_x, min_y = point.min(dim=0)[0]
-        max_x, max_y = point.max(dim=0)[0]
+        min_x, min_y = point.min(dim=0)[0][0:2]
+        max_x, max_y = point.max(dim=0)[0][0:2]
 
         start_x, end_x = get_start_end(min_x.item(), max_x.item(), bin_num)
         start_y, end_y = get_start_end(min_y.item(), max_y.item(), bin_num)
