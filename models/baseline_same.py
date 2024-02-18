@@ -54,6 +54,7 @@ class Baseline(nn.Module):
         self.arch = cfg.arch
         self.semantic = cfg.semantic
         self.extra = cfg.extra_semantic_layers
+        self.concat = cfg. semantic_concat
         if cfg.arch == 'dpt':
             self.arch = 'dpt'
             self.dpt_config = DPTConfig(image_size=256)
@@ -203,13 +204,18 @@ class Baseline(nn.Module):
         if self.semantic:
             semantic = self.pred_semantic(p0)
 
+            if self.concat:
+                combination = torch.cat((embedding, semantic), dim=1)
+                return prob, embedding, depth, surface_normal, param, semantic, combination
+
 
             if self.extra:
                 semantic2 = self.pred_semantic2(semantic)
-                combination = self.combination(torch.cat((embedding, semantic2), dim=1))
+                combination = self.combination(torch.cat((embedding, semantic2), dim=1))   
 
-            else: 
+            else:
                 combination = self.combination(torch.cat((embedding, semantic), dim=1))
+
             return prob, embedding, depth, surface_normal, param, semantic, combination
             
         return prob, embedding, depth, surface_normal, param
