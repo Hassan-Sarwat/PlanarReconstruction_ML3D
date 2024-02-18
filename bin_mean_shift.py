@@ -210,7 +210,7 @@ class Bin_Mean_Shift(nn.Module):
 
     def forward(self, logit, embedding, param, gt_seg):
         batch_size, c, h, w = embedding.size()
-        assert(c == 2)
+        assert(c == 43)
 
         # apply mean shift to every item
         segmentations, sample_segmentations, centers, sample_probs, sample_gt_segs, sample_params = [], [], [], [], [], []
