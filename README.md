@@ -56,11 +56,15 @@ python main.py eval with dataset.root_dir=/path/to/save/processd/data resume_dir
 ### ML3D Experiments:
 DPT
 ```bash
-python main.py train with dataset.root_dir=/path/to/save/processd/data model.arch=dpt
+python main.py train with dataset.root_dir=/path/to/save/processd/data model.arch=dpt solver.lr=0.00001 solver.weight_decay=0
 ```
 Semantic
 ```bash
 python main.py train with dataset.root_dir=/path/to/save/processd/data model.semantic=True
+```
+Semantic Extra
+```bash
+python main.py train with dataset.root_dir=/path/to/save/processd/data model.semantic=True model.extra_semantic_layers=True
 ```
 
 Contrastive, set to one of the following 
