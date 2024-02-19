@@ -38,33 +38,33 @@ pip install -r requirements.txt
 ### Downloading and converting data
 Please download the *.tfrecords* files for training and testing converted by [PlaneNet](https://github.com/art-programmer/PlaneNet), then convert the *.tfrecords* to *.npz* files:
 ```bash
-python data_tools/convert_tfrecords.py --data_type=train --input_tfrecords_file=/path/to/planes_scannet_train.tfrecords --output_dir=/path/to/save/processd/data
-python data_tools/convert_tfrecords.py --data_type=val --input_tfrecords_file=/path/to/planes_scannet_val.tfrecords --output_dir=/path/to/save/processd/data
+python data_tools/convert_tfrecords.py --data_type=train --input_tfrecords_file=/path/to/planes_scannet_train.tfrecords --output_dir=/path/to/save/processed/data
+python data_tools/convert_tfrecords.py --data_type=val --input_tfrecords_file=/path/to/planes_scannet_val.tfrecords --output_dir=/path/to/save/processed/data
 ```
 
 ### Training
 Run the following command to train our network:
 ```bash
-python main.py train with dataset.root_dir=/path/to/save/processd/data
+python main.py train with dataset.root_dir=/path/to/save/processed/data
 ```
 
 ### Evaluation
 Run the following command to evaluate the performance:
 ```bash
-python main.py eval with dataset.root_dir=/path/to/save/processd/data resume_dir=/path/to/pretrained.pt dataset.batch_size=1
+python main.py eval with dataset.root_dir=/path/to/save/processed/data resume_dir=/path/to/pretrained.pt dataset.batch_size=1
 ```
 ### ML3D Experiments:
 DPT
 ```bash
-python main.py train with dataset.root_dir=/path/to/save/processd/data model.arch=dpt solver.lr=0.00001 solver.weight_decay=0
+python main.py train with dataset.root_dir=/path/to/save/processed/data model.arch=dpt solver.lr=0.00001 solver.weight_decay=0
 ```
 Semantic
 ```bash
-python main.py train with dataset.root_dir=/path/to/save/processd/data model.semantic=True
+python main.py train with dataset.root_dir=/path/to/save/processed/data model.semantic=True
 ```
 Semantic Extra
 ```bash
-python main.py train with dataset.root_dir=/path/to/save/processd/data model.semantic=True model.extra_semantic_layers=True
+python main.py train with dataset.root_dir=/path/to/save/processed/data model.semantic=True model.extra_semantic_layers=True
 ```
 
 Contrastive, set to one of the following 
@@ -73,7 +73,7 @@ Contrastive, set to one of the following
 * contrastive_anchors
 * contrastive_anchors_neg
 ```bash
-python main.py train with dataset.root_dir=/path/to/save/processd/data model.embedding_loss=contrastive_anchors
+python main.py train with dataset.root_dir=/path/to/save/processed/data model.embedding_loss=contrastive_anchors
 ```
 
 
