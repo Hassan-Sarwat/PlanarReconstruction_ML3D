@@ -290,6 +290,7 @@ def train(_run, _log):
         instance_rmses = AverageMeter()
         mean_angles = AverageMeter()
         losses_semantic = AverageMeter()
+        losses_contrastive = AverageMeter()
 
 
         tic = time.time()
@@ -325,8 +326,8 @@ def train(_run, _log):
                 bin_mean_shift(logit, tempc, param, gt_seg)
 
             # calculate loss
-            loss, loss_pull, loss_push, loss_binary, loss_depth, loss_normal, loss_parameters, loss_pw, loss_instance, loss_semantic \
-                = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.
+            loss, loss_pull, loss_push, loss_binary, loss_depth, loss_normal, loss_parameters, loss_pw, loss_instance, loss_semantic, loss_contrastive \
+                = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.
             batch_size = image.size(0)
             
             for i in range(batch_size):
@@ -337,7 +338,6 @@ def train(_run, _log):
                 else:
                     _loss, _loss_pull, _loss_push = embedding_loss(embedding[i:i+1], sample['num_planes'][i:i+1],
                                                                      instance[i:i+1], device)
-
 
                                                                      
 
@@ -407,6 +407,7 @@ def train(_run, _log):
             losses_instance.update(loss_instance.item())
             if cfg.model.semantic:
                 losses_semantic.update(loss_semantic.item())
+
             # update time
             batch_time.update(time.time() - tic)
             tic = time.time()
@@ -447,10 +448,12 @@ def train(_run, _log):
                   f"Depth: {losses_depth.avg:.6f}\t"
                   f"IoU: {ioues.avg:.2f}\t"
                   f"RMSE: {rmses.avg:.4f}\t"
+
                   f"Semantic: {losses_semantic.avg:.4f}\t")
         
 
             
+
 
 
         # save checkpoint

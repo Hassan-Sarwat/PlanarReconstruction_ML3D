@@ -1,6 +1,7 @@
 seed: 123
 num_gpus: 1
 num_epochs: 5
+
 resume_dir: /cluster/52/sarwath/snet/output/models/ # /cluster/51/soniacp/semantic/models/ #
 print_interval: 10
 
@@ -10,10 +11,9 @@ solver:
   lr:  0.0001  # 0.00001 #   
   weight_decay: 0.00001 # 0 #  
 
-
 dataset:
-  root_dir: /cluster/52/sarwath/snet/output/processed/
-  batch_size: 16
+  root_dir: output_dir/processed/
+  batch_size: 8
   num_workers: 8
   shuffle: False
 
@@ -21,8 +21,10 @@ model:
   arch:  resnet101 # dpt # 
   pretrained: True
   embed_dims: 2
+  embed_loss: hinge # hinge, contrastive, contrastive_anchors, contrastive_anchors_neg
   fix_bn: False
   semantic: False
   num_samples: 20
   embedding_loss: contrastive_anchors_neg # [hinge, contrastive_centers, contrastive_anchors, contrastive_anchors_neg]
   extra_semantic_layers: False
+

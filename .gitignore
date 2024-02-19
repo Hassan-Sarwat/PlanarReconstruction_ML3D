@@ -5,6 +5,7 @@
 output_dir/
 datasets/
 images/
+config.yaml
 
 # checkpoints
 experiments/

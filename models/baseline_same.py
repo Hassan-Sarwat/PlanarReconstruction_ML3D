@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from models import resnet_scene as resnet
-from transformers import DPTModel, DPTConfig, DPTImageProcessor, DPTForSemanticSegmentation
+from transformers import DPTModel, DPTConfig, DPTImageProcessor, DPTForSemanticSegmentation, DPTForDepthEstimation
 import collections.abc
 import math
 from dataclasses import dataclass
@@ -47,6 +47,7 @@ class ResNet(nn.Module):
     
 
 
+
 class Baseline(nn.Module):
     def __init__(self, cfg):
         super(Baseline, self).__init__()
@@ -57,6 +58,7 @@ class Baseline(nn.Module):
             self.arch = 'dpt'
             self.dpt_config = DPTConfig(image_size=256)
             self.dpt =  DPTForSemanticSegmentation(config = self.dpt_config).from_pretrained("Intel/dpt-large-ade")
+            self.dpt.config.image_size = 256
             self.dpt_config = self.dpt.config
             self.dpt_head = nn.Sequential(
                 nn.Conv2d(256, 256, kernel_size=3, padding=1, bias=False),
