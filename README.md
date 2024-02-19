@@ -1,6 +1,6 @@
 # PlanarReconstruction
 
-This is our implementation of the Paper for ML3D Project at TUM. We have left set up instructions as is in the readme and added a [ML3D Experiments](#ml3d-experiments) section at the botoom
+This is our implementation of the Paper for ML3D Project at TUM. We have left the setup instructions as is in the readme and added a [ML3D Experiments](#ml3d-experiments) section at the botoom
 
 PyTorch implementation of our CVPR 2019 paper:
 
