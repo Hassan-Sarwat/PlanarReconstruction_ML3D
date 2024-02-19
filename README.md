@@ -25,7 +25,7 @@ git clone git@github.com:svip-lab/PlanarReconstruction.git
 
 We use Python 3. Create an Anaconda enviroment and install the dependencies:
 ```bash
-conda create -y -n plane python=3.6
+conda create -y -n plane python=3.8
 conda activate plane
 conda install -c menpo opencv
 pip install -r requirements.txt
@@ -49,12 +49,22 @@ Run the following command to evaluate the performance:
 ```bash
 python main.py eval with dataset.root_dir=/path/to/save/processd/data resume_dir=/path/to/pretrained.pt dataset.batch_size=1
 ```
-
-### Prediction
-Run the following command to predict on a single image:
+### Experiments:
+DPT, either resnet or dpt
 ```bash
-python predict.py with resume_dir=pretrained.pt image_path=/path/to/image
+python main.py train with dataset.root_dir=/path/to/save/processd/data model.arch=dpt
 ```
+Semantic, either True or False
+```bash
+python main.py train with dataset.root_dir=/path/to/save/processd/data model.semantic=True
+```
+
+Contrastive, set to one of the following [hinge, contrastive_centers, contrastive_anchors, contrastive_anchors_neg]
+```bash
+python main.py train with dataset.root_dir=/path/to/save/processd/data model.embedding_loss = contrastive_anchors
+```
+
+
 
 ## Acknowledgements
 We thank [Chen Liu](http://art-programmer.github.io/index.html) for his great works and repos.

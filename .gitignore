@@ -4,7 +4,7 @@
 # Data
 output_dir/
 datasets/
-
+images/
 
 # checkpoints
 experiments/
@@ -113,3 +113,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+#embeddings
+*.pt
