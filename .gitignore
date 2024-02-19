@@ -4,8 +4,8 @@
 # Data
 output_dir/
 datasets/
+images/
 config.yaml
-
 
 # checkpoints
 experiments/
@@ -114,3 +114,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+#embeddings
+*.pt

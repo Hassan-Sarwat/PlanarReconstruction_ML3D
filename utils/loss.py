@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
 
 
 # https://github.com/kmaninis/OSVOS-PyTorch
@@ -44,6 +45,12 @@ def hinge_embedding_loss(embedding, num_planes, segmentation, device, t_pull=0.5
     num_planes = num_planes.numpy()[0]
     embedding = embedding[0]
     segmentation = segmentation[0]
+    
+    # print(embedding.shape)
+    # print('embedding'*3)
+    # print(segmentation.shape)
+    # print('segmentation'*3)
+    
     embeddings = []
     # print(segmentation[0, :, :].view(1, h, w))
     # select embedding with segmentation
@@ -51,6 +58,8 @@ def hinge_embedding_loss(embedding, num_planes, segmentation, device, t_pull=0.5
         feature = torch.transpose(torch.masked_select(embedding, segmentation[i, :, :].view(1, h, w).bool()).view(c, -1), 0, 1)
         embeddings.append(feature)
 
+    # print(embeddings.size())
+    
     centers = []
     for feature in embeddings:
         center = torch.mean(feature, dim=0).view(1, c)
@@ -153,10 +162,7 @@ def Q_loss(param, k_inv_dot_xy1, gt_depth):
     return loss, abs_distance, infered_depth.view(1, 1, h, w)
 
 def semantic_loss(semantic, gt_class,device):
-    b, c, h, w = semantic.size()
-
-    semantic = torch.transpose(semantic.view(c, -1).to(device), 0, 1)
-    gt_class = gt_class.long().view(-1).to(device)
+    gt_class = gt_class.long()
     loss_func = torch.nn.CrossEntropyLoss().to(device)
     loss = loss_func(semantic, gt_class)
     return loss

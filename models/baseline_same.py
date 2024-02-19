@@ -46,36 +46,32 @@ class ResNet(nn.Module):
         return x1, x2, x3, x4, x5 
     
 
-    
+
 
 class Baseline(nn.Module):
     def __init__(self, cfg):
         super(Baseline, self).__init__()
         self.arch = cfg.arch
         self.semantic = cfg.semantic
+        self.extra_semantic_layers = cfg.extra_semantic_layers
         if cfg.arch == 'dpt':
             self.arch = 'dpt'
             self.dpt_config = DPTConfig(image_size=256)
             self.dpt =  DPTForSemanticSegmentation(config = self.dpt_config).from_pretrained("Intel/dpt-large-ade")
             self.dpt.config.image_size = 256
             self.dpt_config = self.dpt.config
-            print(self.dpt_config)
-            print('x'*200)
-            self.dpt_proj = nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
-            self.dpt_conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1)
-            self.dpt_up1 = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
-            self.dpt_conv2 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
-            self.dpt_maxp = nn.MaxPool2d(kernel_size=(9,1), dilation=(8,1), stride = (1,1)) 
-            self.dpt_relu = nn.ReLU()
-
             self.dpt_head = nn.Sequential(
-                nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-                nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1),
+                nn.Conv2d(256, 256, kernel_size=3, padding=1, bias=False),
+                nn.BatchNorm2d(256),
+                nn.ReLU(),
+                # nn.Dropout(self.dpt.config.semantic_classifier_dropout),
+                nn.Conv2d(256, 128, kernel_size=1),
                 nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True),
                 nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1),
-                nn.MaxPool2d(kernel_size=(9,1), dilation=(8,1), stride = (1,1)) ,
+                nn.AvgPool2d(kernel_size=(65,1), stride = 1),
                 nn.ReLU()
             )
+            
         else:
             orig_resnet = resnet.__dict__[cfg.arch](pretrained=cfg.pretrained)
             self.backbone = ResNet(orig_resnet)
@@ -118,8 +114,14 @@ class Baseline(nn.Module):
         if cfg.semantic:
             # semantic segmentation
             self.pred_semantic = nn.Conv2d(channel, 41, (1, 1), padding=0)
-            # combination for semantic pool
-            self.combination = nn.Conv2d(43, 2, (1, 1), padding=0)
+            if cfg.extra_semantic_layers:
+                self.pred_semantic2 = nn.Conv2d(41, 2, (1, 1), padding=0)
+                self.combination = nn.Conv2d(4, 2, (1, 1), padding=0)
+
+            else: 
+                # combination for semantic pool
+                self.combination = nn.Conv2d(43, 2, (1, 1), padding=0)
+
 
     def top_down(self, x):
         c1, c2, c3, c4, c5 = x
@@ -137,57 +139,27 @@ class Baseline(nn.Module):
         return p0, p1, p2, p3, p4, p5
     
     def dpt_backbone(self, x):
-        
+        # Get Hidden States from dpt encoder
         l1 = self.dpt.dpt(x, output_hidden_states=True, output_attentions=True, return_dict=True)
         hidden_states = l1.hidden_states
-        # print(l1.shape)
-        # print('dpt_enc'*10)
-        # output_attentions = l1.output_attentions
-        # return_dict = l1.return_dict
         hidden_states = [ feature for idx, feature in enumerate(hidden_states[1:]) if idx in self.dpt.config.backbone_out_indices]
-        
+        # Pass hidden states to dpt decoder
         l2 = self.dpt.neck(hidden_states=hidden_states)
         l3 = l2[-1]
-        # print(l3.shape)
-        # print('dpt_dec_'*20)
+        # Pass to head
         l4 = self.dpt_head(l3)
-        # print(l4.shape)
-        # print('dpt_head_'*20)
         return l1,l2,l3,l4
 
     def forward(self, x):
-
-        # Garbage, can delete
-        # print(x.size())
-        # print('11'*111)
-        # print(x[0])
-        # feature_extractor = dpt.from_pretrained("Intel/dpt-large")
-        # test = self.feature_extractor(x,do_resize=False,return_tensors='pt')
-        # print(test.data.keys())
-        # print('x'*100)
-        # print(test.data['pixel_values'][0])
-        # print('00'*111)
-        # print(test.data['pixel_values'].size())
-        # print('00'*111)
-        
         if self.arch == 'dpt':
             p3,p2,p1,p0 = self.dpt_backbone(x)
         else:
             # bottom up
             c1, c2, c3, c4, c5 = self.backbone(x)
-            # print('_'*100)
-            # print(c1.size(),'_',c2.size(),'_',c3.size(),'_',c4.size(),'_',c5.size())
-            # print('..'*100)
-
             # top down
             p0, p1, p2, p3, p4, p5 = self.top_down((c1, c2, c3, c4, c5))
-            # print(p0.size(),'_',p1.size(),'_',p2.size(),'_',p3.size(),'_',p4.size(),'_',p5.size())
-            # print('='*100)
             
 
-        # output
-        # print(p0.shape)
-        # print('-'*100)
         prob = self.pred_prob(p0)
         embedding = self.embedding_conv(p0)
         depth = self.pred_depth(p0)
@@ -196,7 +168,11 @@ class Baseline(nn.Module):
         
         if self.semantic:
             semantic = self.pred_semantic(p0)
-            combination = self.combination(torch.cat((embedding, semantic), dim=1))
+            if self.extra_semantic_layers:
+                semantic2 = self.pred_semantic2(semantic)
+                combination = self.combination(torch.cat((embedding, semantic2), dim=1))   
+            else:
+                combination = self.combination(torch.cat((embedding, semantic), dim=1))
             return prob, embedding, depth, surface_normal, param, semantic, combination
             
         return prob, embedding, depth, surface_normal, param

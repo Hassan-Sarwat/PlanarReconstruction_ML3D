@@ -17,7 +17,7 @@ def contrastive_loss(embedding, num_planes, segmentation, device):
 
     # Select embedding with segmentation
     for i in range(num_planes): # avoid non-planar region
-        feature = torch.transpose(torch.masked_select(embedding, segmentation[i, :, :].view(1, h, w)).view(c, -1), 0, 1) # num_pixels_i x 2 
+        feature = torch.transpose(torch.masked_select(embedding, segmentation[i, :, :].view(1, h, w).bool()).view(c, -1), 0, 1) # num_pixels_i x 2 
         embeddings.append(feature)
 
     # Compute the center of each plane
@@ -52,7 +52,7 @@ def contrastive_loss(embedding, num_planes, segmentation, device):
     return torch.mean(loss.to(device)), torch.mean(loss.to(device)), torch.mean(loss.to(device))
 
 
-def contrastive_loss_anchors(embedding, num_planes, segmentation, device):
+def contrastive_loss_anchors(embedding, num_planes, segmentation, device, num_samples=20):
     """Uses num_samples (m) + 1 (centers) anchors per plane. Anchors are obtained by subsampling each plane (feature) 
     m times and computing its subcenter. The length of the subsample is size times the whole plane. This has m+1 positive
     anchors and (m+1)*(num_planes-1) negative ones.
@@ -73,7 +73,7 @@ def contrastive_loss_anchors(embedding, num_planes, segmentation, device):
     # Select embedding with segmentation
     # Compute centers and subcenters
     for i in range(num_planes): # avoid non-planar region
-        feature = torch.transpose(torch.masked_select(embedding, segmentation[i, :, :].view(1, h, w)).view(c, -1), 0, 1)
+        feature = torch.transpose(torch.masked_select(embedding, segmentation[i, :, :].view(1, h, w).bool()).view(c, -1), 0, 1)
         length = feature.shape[0]
 
         center = torch.mean(feature, dim=0).view(1, c)
@@ -113,7 +113,7 @@ def contrastive_loss_anchors(embedding, num_planes, segmentation, device):
 
 
 
-def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device):
+def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device, num_samples=20):
     """Uses num_samples (m) + 1 (centers) anchors per plane, but only for the negative. Anchors are obtained by subsampling 
     each plane (feature) m times and computing its subcenter. The length of the subsample is size times the whole plane. 
     This has 1 positive anchor (the true plane center) and (m+1)*(num_planes-1) negative ones.
@@ -135,7 +135,7 @@ def contrastive_loss_anchors_neg(embedding, num_planes, segmentation, device):
     # Select embedding with segmentation
     # Compute centers and subcenters
     for i in range(num_planes): # avoid non-planar region
-        feature = torch.transpose(torch.masked_select(embedding, segmentation[i, :, :].view(1, h, w)).view(c, -1), 0, 1)
+        feature = torch.transpose(torch.masked_select(embedding, segmentation[i, :, :].view(1, h, w).bool()).view(c, -1), 0, 1)
         length = feature.shape[0]
 
         center = torch.mean(feature, dim=0).view(1, c)
