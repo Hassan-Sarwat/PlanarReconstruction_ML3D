@@ -1,5 +1,7 @@
 # PlanarReconstruction
 
+This is our implementation of the Paper for ML3D Project at TUM. We have left set up instructions as is in the readme and added a [ML3D Experiments](#ml3d-experiments) section at the botoom
+
 PyTorch implementation of our CVPR 2019 paper:
 
 [Single-Image Piece-wise Planar 3D Reconstruction via Associative Embedding](https://arxiv.org/pdf/1902.09777.pdf)
@@ -13,6 +15,8 @@ Zehao Yu\*,
 (\* Equal Contribution)
 
 <img src="misc/pipeline.jpg" width="800">
+
+
 
 ## Getting Started
 
@@ -49,21 +53,24 @@ Run the following command to evaluate the performance:
 ```bash
 python main.py eval with dataset.root_dir=/path/to/save/processd/data resume_dir=/path/to/pretrained.pt dataset.batch_size=1
 ```
-### Experiments:
-DPT, either resnet or dpt
+### ML3D Experiments:
+DPT
 ```bash
 python main.py train with dataset.root_dir=/path/to/save/processd/data model.arch=dpt
 ```
-Semantic, either True or False
+Semantic
 ```bash
 python main.py train with dataset.root_dir=/path/to/save/processd/data model.semantic=True
 ```
 
-Contrastive, set to one of the following [hinge, contrastive_centers, contrastive_anchors, contrastive_anchors_neg]
+Contrastive, set to one of the following 
+* hinge (default)
+* contrastive_centers
+* contrastive_anchors
+* contrastive_anchors_neg
 ```bash
-python main.py train with dataset.root_dir=/path/to/save/processd/data model.embedding_loss = contrastive_anchors
+python main.py train with dataset.root_dir=/path/to/save/processd/data model.embedding_loss=contrastive_anchors
 ```
-
 
 
 ## Acknowledgements
